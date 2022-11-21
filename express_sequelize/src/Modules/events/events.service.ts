@@ -1,10 +1,11 @@
 import Event from './entities/event.entity';
+import Workshop from './entities/workshop.entity';
 
 
 export class EventsService {
 
   async getWarmupEvents() {
-    return await Event.findAll();
+    return await Event.findAll(); 
   }
 
   /* TODO: complete getEventsWithWorkshops so that it returns all events including the workshops
@@ -84,9 +85,19 @@ export class EventsService {
     ```
      */
 
-  async getEventsWithWorkshops() {
-    throw new Error('TODO task 1');
-  }
+    async getEventsWithWorkshops() {
+    const event = await Event.findAll();
+    const workshops = await Workshop.findAll();
+    const result = event.map((e) => {
+      const temporaryWorkshop = workshops.filter((w) => w.eventId == e.id)
+      return {
+        ...e,
+        workshops: temporaryWorkshop
+      }
+    })
+
+    return result;
+    }
 
   /* TODO: complete getFutureEventWithWorkshops so that it returns events with workshops, that have not yet started
     Requirements:
@@ -155,6 +166,27 @@ export class EventsService {
     ```
      */
   async getFutureEventWithWorkshops() {
-    throw new Error('TODO task 2');
+    const workshopInfo = await Workshop.findAll({
+      where: {
+        start: {
+          $gte: new Date()
+        }
+      }
+    });
+    const eventInfo = await Event.findAll({
+      where: {
+        id: {
+          $in: workshopInfo.map((w) => w.eventId)
+        }
+      }
+    });
+    const result = eventInfo.map((e) => {
+      const WorkshopResult = workshopInfo.filter((w) => w.eventId == e.id)
+      return {
+        ...e,
+        workshopresult: WorkshopResult
+      }
+    })
+    return result;
   }
 }
